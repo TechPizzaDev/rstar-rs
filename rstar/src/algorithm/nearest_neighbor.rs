@@ -13,7 +13,6 @@ use alloc::collections::BinaryHeap;
 use alloc::{vec, vec::Vec};
 use core::mem::replace;
 use heapless::binary_heap as static_heap;
-use num_traits::Bounded;
 
 struct RTreeNodeDistanceWrapper<'a, T>
 where
@@ -124,6 +123,77 @@ where
     query_point: <T::Envelope as Envelope>::Point,
 }
 
+impl<'a, T> NearestNeighborInRangeIterator<'a, T>
+where
+    T: PointDistance,
+{
+    pub(crate) fn new(
+        root: &'a ParentNode<T>,
+        query_point: <T::Envelope as Envelope>::Point,
+        smallest_min_max: Distance<T>,
+    ) -> Self {
+        let mut result = NearestNeighborInRangeIterator {
+            nodes: SmallHeap::new(),
+            query_point,
+            smallest_min_max,
+        };
+        result.extend_heap(&root.children);
+        result
+    }
+
+    fn extend_heap(&mut self, children: &'a [RTreeNode<T>]) {
+        for child in children.iter() {
+            let distance = match child {
+                RTreeNode::Parent(ref data) => data.envelope.distance_2(&self.query_point),
+                RTreeNode::Leaf(ref t) => t.distance_2(&self.query_point),
+            };
+
+            if distance <= self.smallest_min_max {
+                self.nodes.push(RTreeNodeDistanceWrapper {
+                    node: child,
+                    distance,
+                });
+            }
+        }
+    }
+}
+
+impl<'a, T> Iterator for NearestNeighborInRangeIterator<'a, T>
+where
+    T: PointDistance,
+{
+    type Item = (&'a T, Distance<T>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(current) = self.nodes.pop() {
+            match current {
+                RTreeNodeDistanceWrapper {
+                    node: RTreeNode::Parent(ref data),
+                    ..
+                } => {
+                    self.extend_heap(&data.children);
+                }
+                RTreeNodeDistanceWrapper {
+                    node: RTreeNode::Leaf(ref t),
+                    distance,
+                } => {
+                    return Some((t, distance));
+                }
+            }
+        }
+        None
+    }
+}
+
+pub struct NearestNeighborInRangeIterator<'a, T>
+where
+    T: PointDistance + 'a,
+{
+    nodes: SmallHeap<RTreeNodeDistanceWrapper<'a, T>>,
+    query_point: <T::Envelope as Envelope>::Point,
+    smallest_min_max: Distance<T>,
+}
+
 impl<'a, T> NearestNeighborIterator<'a, T>
 where
     T: PointDistance,
@@ -229,9 +299,10 @@ impl<T: Ord> SmallHeap<T> {
     }
 }
 
-pub fn nearest_neighbor_with_distance_2<T>(
+pub fn nearest_neighbor_in_range<T>(
     node: &ParentNode<T>,
     query_point: <T::Envelope as Envelope>::Point,
+    mut smallest_min_max: Distance<T>,
 ) -> Option<(&T, Distance<T>)>
 where
     T: PointDistance,
@@ -272,7 +343,6 @@ where
     }
 
     // Calculate smallest minmax-distance
-    let mut smallest_min_max: Distance<T> = Bounded::max_value();
     let mut nodes = SmallHeap::new();
     extend_heap(&mut nodes, node, &query_point, &mut smallest_min_max);
     while let Some(current) = nodes.pop() {
