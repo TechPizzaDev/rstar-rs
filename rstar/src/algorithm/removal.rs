@@ -320,7 +320,7 @@ mod test {
     fn test_remove() {
         let points = create_random_points(1000, SEED_1);
         let offsets = create_random_points(1000, SEED_2);
-        let scaled = offsets.iter().map(|p| p.mul(0.05));
+        let scaled = offsets.iter().map(|p| p.mul(&Point::splat(0.05)));
         let edges: Vec<_> = points
             .iter()
             .zip(scaled)

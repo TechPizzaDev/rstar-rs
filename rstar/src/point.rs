@@ -179,7 +179,7 @@ pub trait Point: Clone + PartialEq + Debug {
 
     /// Returns a new Point with all components set to zero.
     fn new() -> Self {
-        Self::from_value(Zero::zero())
+        Self::splat(Zero::zero())
     }
 
     /// Applies `f` to each pair of components of `self` and `other`.
@@ -191,34 +191,33 @@ pub trait Point: Clone + PartialEq + Debug {
         Self::generate(|i| f(self.nth(i), other.nth(i)))
     }
 
-    /// Returns whether all pairs of components of `self` and `other` pass test closure `f`. Short circuits if any result is false.
-    fn all_component_wise(
-        &self,
-        other: &Self,
-        mut f: impl FnMut(Self::Scalar, Self::Scalar) -> bool,
-    ) -> bool {
-        (0..Self::DIMENSIONS).all(|i| f(self.nth(i), other.nth(i)))
+    /// Test if each component is less than or equal to the corresponding component in other.
+    fn le_point_all(&self, other: &Self) -> bool {
+        (0..Self::DIMENSIONS).all(|i| self.nth(i) <= other.nth(i))
+    }
+
+    /// Test if each component is greater than or equal to the corresponding component in other.
+    fn ge_point_all(&self, other: &Self) -> bool {
+        (0..Self::DIMENSIONS).all(|i| self.nth(i) >= other.nth(i))
     }
 
     /// Returns the dot product of `self` and `rhs`.
     fn dot(&self, rhs: &Self) -> Self::Scalar {
-        self.component_wise(rhs, |l, r| l * r)
-            .fold(Zero::zero(), |acc, val| acc + val)
+        self.mul(rhs).reduce_sum()
     }
 
-    /// Folds (aka reduces or injects) the Point component wise using `f` and returns the result.
-    /// fold() takes two arguments: an initial value, and a closure with two arguments: an 'accumulator', and the value of the current component.
-    /// The closure returns the value that the accumulator should have for the next iteration.
-    ///
-    /// The `start_value` is the value the accumulator will have on the first call of the closure.
-    ///
-    /// After applying the closure to every component of the Point, fold() returns the accumulator.
-    fn fold<T>(&self, start_value: T, mut f: impl FnMut(T, Self::Scalar) -> T) -> T {
-        (0..Self::DIMENSIONS).fold(start_value, |accumulated, i| f(accumulated, self.nth(i)))
+    /// Returns the sum of the components.
+    fn reduce_sum(&self) -> Self::Scalar {
+        (0..Self::DIMENSIONS).fold(Zero::zero(), |acc, i| acc + self.nth(i))
+    }
+
+    /// Returns the product of the components.
+    fn reduce_product(&self) -> Self::Scalar {
+        (1..Self::DIMENSIONS).fold(self.nth(0), |acc, i| acc * self.nth(i))
     }
 
     /// Returns a Point with every component set to `value`.
-    fn from_value(value: Self::Scalar) -> Self {
+    fn splat(value: Self::Scalar) -> Self {
         Self::generate(|_| value)
     }
 
@@ -234,7 +233,7 @@ pub trait Point: Clone + PartialEq + Debug {
 
     /// Returns the squared length of this Point as if it was a vector.
     fn length_2(&self) -> Self::Scalar {
-        self.fold(Zero::zero(), |acc, cur| cur * cur + acc)
+        self.mul(self).reduce_sum()
     }
 
     /// Substracts `other` from `self` component wise.
@@ -247,9 +246,14 @@ pub trait Point: Clone + PartialEq + Debug {
         self.component_wise(other, |l, r| l + r)
     }
 
-    /// Multiplies `self` with `scalar` component wise.
-    fn mul(&self, scalar: Self::Scalar) -> Self {
-        self.map(|coordinate| coordinate * scalar)
+    /// Multiplies `self` by `other` component wise.
+    fn mul(&self, other: &Self) -> Self {
+        self.component_wise(other, |l, r| l * r)
+    }
+
+    /// Divides `self` by `other` component wise.
+    fn div(&self, other: &Self) -> Self {
+        self.component_wise(other, |l, r| l / r)
     }
 
     /// Applies `f` to `self` component wise.

@@ -68,7 +68,7 @@ where
     pub fn from_center(center: P, diameter: P::Scalar) -> Self {
         let one = P::Scalar::one();
         let two = one + one;
-        let radius = P::from_value(diameter / two);
+        let radius = P::splat(diameter / two);
 
         let p1 = center.add(&radius);
         let p2 = center.sub(&radius);
@@ -84,8 +84,8 @@ where
     {
         i.into_iter().fold(
             Self {
-                lower: P::from_value(P::Scalar::max_value()),
-                upper: P::from_value(P::Scalar::min_value()),
+                lower: P::splat(P::Scalar::max_value()),
+                upper: P::splat(P::Scalar::min_value()),
             },
             |aabb, p| Self {
                 lower: aabb.lower.min_point(p),
@@ -121,8 +121,8 @@ where
         let max = P::Scalar::max_value();
         let min = P::Scalar::min_value();
         Self {
-            lower: P::from_value(max),
-            upper: P::from_value(min),
+            lower: P::splat(max),
+            upper: P::splat(min),
         }
     }
 
@@ -131,13 +131,11 @@ where
     }
 
     fn contains_point(&self, point: &P) -> bool {
-        self.lower.all_component_wise(point, |x, y| x <= y)
-            && self.upper.all_component_wise(point, |x, y| x >= y)
+        self.lower.le_point_all(point) && self.upper.ge_point_all(point)
     }
 
     fn contains_envelope(&self, other: &Self) -> bool {
-        self.lower.all_component_wise(&other.lower, |l, r| l <= r)
-            && self.upper.all_component_wise(&other.upper, |l, r| l >= r)
+        self.lower.le_point_all(&other.lower) && self.upper.ge_point_all(&other.upper)
     }
 
     fn merge(&mut self, other: &Self) {
@@ -153,15 +151,12 @@ where
     }
 
     fn intersects(&self, other: &Self) -> bool {
-        self.lower.all_component_wise(&other.upper, |l, r| l <= r)
-            && self.upper.all_component_wise(&other.lower, |l, r| l >= r)
+        self.lower.le_point_all(&other.upper) && self.upper.ge_point_all(&other.lower)
     }
 
     fn area(&self) -> P::Scalar {
-        let zero = P::Scalar::zero();
-        let one = P::Scalar::one();
         let diag = self.upper.sub(&self.lower);
-        diag.fold(one, |acc, cur| max_inline(cur, zero) * acc)
+        diag.max_point(&P::new()).reduce_product()
     }
 
     fn distance_2(&self, point: &P) -> P::Scalar {
@@ -192,16 +187,16 @@ where
         }
 
         *result.nth_mut(max_diff.2) = max_diff.1;
-        result.fold(Zero::zero(), |acc, curr| acc + curr)
+        result.reduce_sum()
     }
 
-    fn center(&self) -> Self::Point {
-        let one = <Self::Point as Point>::Scalar::one();
+    fn center(&self) -> P {
+        let one = P::Scalar::one();
         let two = one + one;
-        self.lower.component_wise(&self.upper, |x, y| (x + y) / two)
+        self.lower.add(&self.upper).div(&Point::splat(two))
     }
 
-    fn intersection_area(&self, other: &Self) -> <Self::Point as Point>::Scalar {
+    fn intersection_area(&self, other: &Self) -> P::Scalar {
         AABB {
             lower: self.lower.max_point(&other.lower),
             upper: self.upper.min_point(&other.upper),
@@ -211,8 +206,7 @@ where
 
     fn perimeter_value(&self) -> P::Scalar {
         let diag = self.upper.sub(&self.lower);
-        let zero = P::Scalar::zero();
-        max_inline(diag.fold(zero, |acc, value| acc + value), zero)
+        max_inline(diag.reduce_sum(), P::Scalar::zero())
     }
 
     fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {
