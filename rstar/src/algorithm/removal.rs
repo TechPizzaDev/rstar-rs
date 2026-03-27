@@ -12,6 +12,8 @@ use alloc::{vec, vec::Vec};
 #[allow(unused_imports)] // Import is required when building without std
 use num_traits::Float;
 
+use smallvec::SmallVec;
+
 /// Iterator returned by `impl IntoIter for RTree`.
 ///
 /// Consumes the whole tree and yields all leaf objects.
@@ -70,7 +72,7 @@ where
     Params: RTreeParams,
     R: SelectionFunction<T>,
 {
-    node_stack: Vec<(ParentNode<T>, usize, usize)>,
+    node_stack: SmallVec<[(ParentNode<T>, usize, usize); 8]>,
     removal_function: R,
     rtree: &'a mut RTree<T, Params>,
     original_size: usize,
@@ -97,9 +99,7 @@ where
         );
         let original_size = replace(rtree.size_mut(), 0);
 
-        let m = Params::MIN_SIZE;
-        let max_depth = (original_size as f32).log(m.max(2) as f32).ceil() as usize;
-        let mut node_stack = Vec::with_capacity(max_depth);
+        let mut node_stack = SmallVec::new();
         node_stack.push((root, 0, 0));
 
         DrainIterator {
