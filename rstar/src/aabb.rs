@@ -1,4 +1,4 @@
-use crate::point::{max_inline, Point, PointExt};
+use crate::point::{max_inline, Point};
 use crate::{Envelope, RTreeObject};
 use num_traits::{Bounded, One, Zero};
 

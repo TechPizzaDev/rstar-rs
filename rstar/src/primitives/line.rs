@@ -1,7 +1,7 @@
 use crate::envelope::Envelope;
 use crate::object::PointDistance;
 use crate::object::RTreeObject;
-use crate::point::{Point, PointExt};
+use crate::point::Point;
 use crate::{aabb::AABB, object::Distance};
 use num_traits::{One, Zero};
 

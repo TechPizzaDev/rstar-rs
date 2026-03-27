@@ -176,12 +176,7 @@ pub trait Point: Clone + PartialEq + Debug {
 
     /// Mutable variant of [nth](#methods.nth).
     fn nth_mut(&mut self, index: usize) -> &mut Self::Scalar;
-}
 
-impl<T> PointExt for T where T: Point {}
-
-/// Utility functions for Point
-pub trait PointExt: Point {
     /// Returns a new Point with all components set to zero.
     fn new() -> Self {
         Self::from_value(Zero::zero())

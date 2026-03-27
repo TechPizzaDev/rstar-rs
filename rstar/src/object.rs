@@ -3,7 +3,7 @@ use alloc::sync::Arc;
 
 use crate::aabb::AABB;
 use crate::envelope::Envelope;
-use crate::point::{Point, PointExt};
+use crate::point::Point;
 
 /// Type alias for distance scalar types derived from `PointDistance` objects
 #[allow(type_alias_bounds)]
@@ -215,7 +215,7 @@ where
     P: Point,
 {
     fn distance_2(&self, point: &P) -> P::Scalar {
-        <Self as PointExt>::distance_2(self, point)
+        <Self as Point>::distance_2(self, point)
     }
 
     fn contains_point(&self, point: &<Self::Envelope as Envelope>::Point) -> bool {
@@ -227,7 +227,7 @@ where
         point: &<Self::Envelope as Envelope>::Point,
         max_distance_2: Distance<Self>,
     ) -> Option<P::Scalar> {
-        let distance_2 = <Self as PointExt>::distance_2(self, point);
+        let distance_2 = <Self as Point>::distance_2(self, point);
         if distance_2 <= max_distance_2 {
             Some(distance_2)
         } else {

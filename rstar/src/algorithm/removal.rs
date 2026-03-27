@@ -250,7 +250,7 @@ mod test {
     use std::mem::forget;
 
     use crate::algorithm::selection_functions::{SelectAllFunc, SelectInEnvelopeFuncIntersecting};
-    use crate::point::PointExt;
+    use crate::point::Point;
     use crate::primitives::Line;
     use crate::test_utilities::{create_random_points, create_random_rectangles, SEED_1, SEED_2};
     use crate::AABB;
