@@ -19,7 +19,7 @@ where
     T: PointDistance + 'a,
 {
     node: &'a RTreeNode<T>,
-    distance: Distance<T>,
+    distance_2: Distance<T>,
 }
 
 impl<T> PartialEq for RTreeNodeDistanceWrapper<'_, T>
@@ -27,7 +27,7 @@ where
     T: PointDistance,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.distance == other.distance
+        self.distance_2 == other.distance_2
     }
 }
 
@@ -48,7 +48,7 @@ where
 {
     fn cmp(&self, other: &Self) -> ::core::cmp::Ordering {
         // Inverse comparison creates a min heap
-        other.distance.partial_cmp(&self.distance).unwrap()
+        other.distance_2.partial_cmp(&self.distance_2).unwrap()
     }
 }
 
@@ -81,7 +81,7 @@ where
 
             RTreeNodeDistanceWrapper {
                 node: child,
-                distance,
+                distance_2: distance,
             }
         }));
     }
@@ -104,7 +104,7 @@ where
                 }
                 RTreeNodeDistanceWrapper {
                     node: RTreeNode::Leaf(ref t),
-                    distance,
+                    distance_2: distance,
                 } => {
                     return Some((t, distance));
                 }
@@ -130,12 +130,12 @@ where
     pub(crate) fn new(
         root: &'a ParentNode<T>,
         query_point: <T::Envelope as Envelope>::Point,
-        smallest_min_max: Distance<T>,
+        smallest_min_max_2: Distance<T>,
     ) -> Self {
         let mut result = NearestNeighborInRangeIterator {
             nodes: SmallHeap::new(),
             query_point,
-            smallest_min_max,
+            smallest_min_max_2,
         };
         result.extend_heap(&root.children);
         result
@@ -143,15 +143,15 @@ where
 
     fn extend_heap(&mut self, children: &'a [RTreeNode<T>]) {
         for child in children.iter() {
-            let distance = match child {
+            let distance_2 = match child {
                 RTreeNode::Parent(ref data) => data.envelope.distance_2(&self.query_point),
                 RTreeNode::Leaf(ref t) => t.distance_2(&self.query_point),
             };
 
-            if distance <= self.smallest_min_max {
+            if distance_2 <= self.smallest_min_max_2 {
                 self.nodes.push(RTreeNodeDistanceWrapper {
                     node: child,
-                    distance,
+                    distance_2,
                 });
             }
         }
@@ -175,7 +175,7 @@ where
                 }
                 RTreeNodeDistanceWrapper {
                     node: RTreeNode::Leaf(ref t),
-                    distance,
+                    distance_2: distance,
                 } => {
                     return Some((t, distance));
                 }
@@ -191,7 +191,7 @@ where
 {
     nodes: SmallHeap<RTreeNodeDistanceWrapper<'a, T>>,
     query_point: <T::Envelope as Envelope>::Point,
-    smallest_min_max: Distance<T>,
+    smallest_min_max_2: Distance<T>,
 }
 
 impl<'a, T> NearestNeighborIterator<'a, T>
@@ -302,7 +302,7 @@ impl<T: Ord> SmallHeap<T> {
 pub fn nearest_neighbor_in_range<T>(
     node: &ParentNode<T>,
     query_point: <T::Envelope as Envelope>::Point,
-    mut smallest_min_max: Distance<T>,
+    mut smallest_min_max_2: Distance<T>,
 ) -> Option<(&T, Distance<T>)>
 where
     T: PointDistance,
@@ -311,32 +311,32 @@ where
         nodes: &mut SmallHeap<RTreeNodeDistanceWrapper<'a, T>>,
         node: &'a ParentNode<T>,
         query_point: &<T::Envelope as Envelope>::Point,
-        min_max_distance: &mut Distance<T>,
+        min_max_2: &mut Distance<T>,
     ) where
         T: PointDistance + 'a,
     {
         for child in &node.children {
-            let distance_if_less_or_equal = match child {
+            let distance_2_if_less_or_equal = match child {
                 RTreeNode::Parent(ref data) => {
-                    let distance = data.envelope.distance_2(query_point);
-                    if distance <= *min_max_distance {
-                        Some(distance)
+                    let distance_2 = data.envelope.distance_2(query_point);
+                    if distance_2 <= *min_max_2 {
+                        Some(distance_2)
                     } else {
                         None
                     }
                 }
                 RTreeNode::Leaf(ref t) => {
-                    t.distance_2_if_less_or_equal(query_point, *min_max_distance)
+                    t.distance_2_if_less_or_equal(query_point, *min_max_2)
                 }
             };
-            if let Some(distance) = distance_if_less_or_equal {
-                *min_max_distance = min_inline(
-                    *min_max_distance,
+            if let Some(distance_2) = distance_2_if_less_or_equal {
+                *min_max_2 = min_inline(
+                    *min_max_2,
                     child.envelope().min_max_dist_2(query_point),
                 );
                 nodes.push(RTreeNodeDistanceWrapper {
                     node: child,
-                    distance,
+                    distance_2,
                 });
             }
         }
@@ -344,20 +344,20 @@ where
 
     // Calculate smallest minmax-distance
     let mut nodes = SmallHeap::new();
-    extend_heap(&mut nodes, node, &query_point, &mut smallest_min_max);
+    extend_heap(&mut nodes, node, &query_point, &mut smallest_min_max_2);
     while let Some(current) = nodes.pop() {
         match current {
             RTreeNodeDistanceWrapper {
                 node: RTreeNode::Parent(ref data),
                 ..
             } => {
-                extend_heap(&mut nodes, data, &query_point, &mut smallest_min_max);
+                extend_heap(&mut nodes, data, &query_point, &mut smallest_min_max_2);
             }
             RTreeNodeDistanceWrapper {
                 node: RTreeNode::Leaf(ref t),
-                distance,
+                distance_2,
             } => {
-                return Some((t, distance));
+                return Some((t, distance_2));
             }
         }
     }

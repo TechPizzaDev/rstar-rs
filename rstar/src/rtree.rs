@@ -983,13 +983,13 @@ where
     pub fn nearest_neighbor_in_range(
         &self,
         query_point: <T::Envelope as Envelope>::Point,
-        smallest_min_max: Distance<T>,
+        smallest_min_max_2: Distance<T>,
     ) -> Option<(&T, Distance<T>)> {
         if self.size > 0 {
             nearest_neighbor::nearest_neighbor_in_range(
                 &self.root,
                 query_point.clone(),
-                smallest_min_max,
+                smallest_min_max_2,
             )
         } else {
             None
@@ -1147,12 +1147,12 @@ where
     pub fn nearest_neighbor_iter_in_range(
         &self,
         query_point: <T::Envelope as Envelope>::Point,
-        smallest_min_max: Distance<T>,
+        smallest_min_max_2: Distance<T>,
     ) -> NearestNeighborInRangeIterator<'_, T> {
         nearest_neighbor::NearestNeighborInRangeIterator::new(
             &self.root,
             query_point,
-            smallest_min_max,
+            smallest_min_max_2,
         )
     }
 
