@@ -77,25 +77,25 @@ fn bulk_load_complex_geom_cached(c: &mut Criterion) {
     );
 }
 
-fn tree_creation_quality(c: &mut Criterion) {
+fn tree_creation_quality<const N: usize>(c: &mut Criterion) {
     const SIZE: usize = 100_000;
-    let points: Vec<_> = create_random_points(SIZE, SEED_1);
+    let points: Vec<_> = create_random_points_n::<N>(SIZE, SEED_1);
     let tree_bulk_loaded = RTree::<_, Params>::bulk_load_with_params(points.clone());
-    let mut tree_sequential = RTree::new();
+    let mut tree_sequential: RTree<[f64; N]> = RTree::new();
     for point in &points {
         tree_sequential.insert(*point);
     }
 
-    let query_points = create_random_points(100, SEED_2);
+    let query_points = create_random_points_n(100, SEED_2);
     let query_points_cloned_1 = query_points.clone();
-    c.bench_function("bulk load quality", move |b| {
+    c.bench_function(&format!("bulk load quality {}D", N), move |b| {
         b.iter(|| {
             for query_point in &query_points {
                 tree_bulk_loaded.nearest_neighbor(*query_point).unwrap();
             }
         })
     })
-    .bench_function("sequential load quality", move |b| {
+    .bench_function(&format!("sequential load quality {}D", N), move |b| {
         b.iter(|| {
             for query_point in &query_points_cloned_1 {
                 tree_sequential.nearest_neighbor(*query_point).unwrap();
@@ -146,7 +146,9 @@ criterion_group!(
     bulk_load_comparison,
     bulk_load_complex_geom,
     bulk_load_complex_geom_cached,
-    tree_creation_quality,
+    tree_creation_quality::<2>,
+    tree_creation_quality::<3>,
+    tree_creation_quality::<4>,
     locate_successful,
     locate_unsuccessful,
     locate_successful_internal,
@@ -154,9 +156,13 @@ criterion_group!(
 );
 criterion_main!(benches);
 
-fn create_random_points(num_points: usize, seed: &[u8; 32]) -> Vec<[f64; 2]> {
+fn create_random_points_n<const N: usize>(num_points: usize, seed: &[u8; 32]) -> Vec<[f64; N]> {
     let mut rng = Hc128Rng::from_seed(*seed);
     (0..num_points).map(|_| rng.gen()).collect()
+}
+
+fn create_random_points(num_points: usize, seed: &[u8; 32]) -> Vec<[f64; 2]> {
+    create_random_points_n(num_points, seed)
 }
 
 fn create_random_polygons(
