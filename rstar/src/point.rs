@@ -95,7 +95,27 @@ use num_traits::{Bounded, Num, Signed, Zero};
 /// #
 /// ```
 ///
-pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
+pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
+    /// Compares and returns the minimum of two values.
+    #[inline]
+    fn min(self, other: Self) -> Self {
+        if self < other {
+            self
+        } else {
+            other
+        }
+    }
+
+    /// Compares and returns the maximum of two values.
+    #[inline]
+    fn max(self, other: Self) -> Self {
+        if self > other {
+            self
+        } else {
+            other
+        }
+    }
+}
 
 impl<S> RTreeNum for S where S: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
@@ -208,7 +228,7 @@ pub trait Point: Clone + PartialEq + Debug {
 
     /// Returns the sum of the components.
     fn reduce_sum(&self) -> Self::Scalar {
-        (0..Self::DIMENSIONS).fold(Zero::zero(), |acc, i| acc + self.nth(i))
+        (1..Self::DIMENSIONS).fold(self.nth(0), |acc, i| acc + self.nth(i))
     }
 
     /// Returns the product of the components.
@@ -223,17 +243,17 @@ pub trait Point: Clone + PartialEq + Debug {
 
     /// Returns a Point with each component set to the smallest of each component pair of `self` and `other`.
     fn min_point(&self, other: &Self) -> Self {
-        self.component_wise(other, min_inline)
+        self.component_wise(other, RTreeNum::min)
     }
 
     /// Returns a Point with each component set to the biggest of each component pair of `self` and `other`.
     fn max_point(&self, other: &Self) -> Self {
-        self.component_wise(other, max_inline)
+        self.component_wise(other, RTreeNum::max)
     }
 
     /// Returns the squared length of this Point as if it was a vector.
     fn length_2(&self) -> Self::Scalar {
-        self.mul(self).reduce_sum()
+        self.dot(self)
     }
 
     /// Substracts `other` from `self` component wise.
@@ -264,30 +284,6 @@ pub trait Point: Clone + PartialEq + Debug {
     /// Returns the squared distance between `self` and `other`.
     fn distance_2(&self, other: &Self) -> Self::Scalar {
         self.sub(other).length_2()
-    }
-}
-
-#[inline]
-pub fn min_inline<S>(a: S, b: S) -> S
-where
-    S: RTreeNum,
-{
-    if a < b {
-        a
-    } else {
-        b
-    }
-}
-
-#[inline]
-pub fn max_inline<S>(a: S, b: S) -> S
-where
-    S: RTreeNum,
-{
-    if a > b {
-        a
-    } else {
-        b
     }
 }
 

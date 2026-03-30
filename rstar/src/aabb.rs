@@ -1,4 +1,4 @@
-use crate::point::{max_inline, Point};
+use crate::point::{Point, RTreeNum};
 use crate::{Envelope, RTreeObject};
 use num_traits::{Bounded, One, Zero};
 
@@ -163,10 +163,11 @@ where
         self.distance_2(point)
     }
 
-    fn min_max_dist_2(&self, point: &P) -> <P as Point>::Scalar {
+    fn min_max_dist_2(&self, point: &P) -> P::Scalar {
         let l = self.lower.sub(point);
         let u = self.upper.sub(point);
-        let mut max_diff = (Zero::zero(), Zero::zero(), 0); // diff, min, index
+
+        let (mut max_diff, mut max_min, mut max_i) = (Zero::zero(), Zero::zero(), 0);
         let mut result = P::new();
 
         for i in 0..P::DIMENSIONS {
@@ -181,12 +182,12 @@ where
             let diff = max - min;
             *result.nth_mut(i) = max;
 
-            if diff >= max_diff.0 {
-                max_diff = (diff, min, i);
+            if diff > max_diff {
+                (max_diff, max_min, max_i) = (diff, min, i);
             }
         }
 
-        *result.nth_mut(max_diff.2) = max_diff.1;
+        *result.nth_mut(max_i) = max_min;
         result.reduce_sum()
     }
 
@@ -206,7 +207,7 @@ where
 
     fn perimeter_value(&self) -> P::Scalar {
         let diag = self.upper.sub(&self.lower);
-        max_inline(diag.reduce_sum(), P::Scalar::zero())
+        diag.reduce_sum().max(P::Scalar::zero())
     }
 
     fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {

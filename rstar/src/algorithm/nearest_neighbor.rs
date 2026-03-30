@@ -1,7 +1,7 @@
-use crate::point::min_inline;
 use crate::{
     node::{ParentNode, RTreeNode},
     object::Distance,
+    point::RTreeNum,
 };
 use crate::{Envelope, PointDistance, RTreeObject};
 
@@ -325,15 +325,10 @@ where
                         None
                     }
                 }
-                RTreeNode::Leaf(ref t) => {
-                    t.distance_2_if_less_or_equal(query_point, *min_max_2)
-                }
+                RTreeNode::Leaf(ref t) => t.distance_2_if_less_or_equal(query_point, *min_max_2),
             };
             if let Some(distance_2) = distance_2_if_less_or_equal {
-                *min_max_2 = min_inline(
-                    *min_max_2,
-                    child.envelope().min_max_dist_2(query_point),
-                );
+                *min_max_2 = min_max_2.min(child.envelope().min_max_dist_2(query_point));
                 nodes.push(RTreeNodeDistanceWrapper {
                     node: child,
                     distance_2,
