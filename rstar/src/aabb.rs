@@ -64,6 +64,12 @@ where
         }
     }
 
+    /// Creates a new AABB encompassing the lower and upper corners.
+    pub fn from_corners_unchecked(lower: P, upper: P) -> Self {
+        debug_assert!(lower.le_point_all(&upper));
+        AABB { lower, upper }
+    }
+
     /// Creates a new AABB from a center and a diameter.
     pub fn from_center(center: P, diameter: P::Scalar) -> Self {
         let one = P::Scalar::one();
