@@ -1,5 +1,7 @@
+use core::cmp::Ordering;
+
+use crate::Envelope;
 use crate::point::{Point, RTreeNum};
-use crate::{Envelope, RTreeObject};
 use num_traits::{Bounded, One, Zero};
 
 #[cfg(feature = "serde")]
@@ -225,28 +227,8 @@ where
         diag.reduce_sum().max(P::Scalar::zero())
     }
 
-    fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {
-        envelopes.sort_unstable_by(|l, r| {
-            l.envelope()
-                .lower
-                .nth(axis)
-                .partial_cmp(&r.envelope().lower.nth(axis))
-                .unwrap()
-        });
-    }
-
-    fn partition_envelopes<T: RTreeObject<Envelope = Self>>(
-        axis: usize,
-        envelopes: &mut [T],
-        selection_size: usize,
-    ) {
-        envelopes.select_nth_unstable_by(selection_size, |l, r| {
-            l.envelope()
-                .lower
-                .nth(axis)
-                .partial_cmp(&r.envelope().lower.nth(axis))
-                .unwrap()
-        });
+    fn cmp_axis(l: &Self, r: &Self, axis: usize) -> Ordering {
+        l.lower.nth(axis).partial_cmp(&r.lower.nth(axis)).unwrap()
     }
 }
 

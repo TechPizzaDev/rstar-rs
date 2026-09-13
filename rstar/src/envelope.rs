@@ -1,3 +1,5 @@
+use core::cmp::Ordering;
+
 use crate::{Point, RTreeObject};
 
 /// An envelope type that encompasses some child nodes.
@@ -62,8 +64,13 @@ pub trait Envelope: Clone + PartialEq + ::core::fmt::Debug {
     /// Returns a value proportional to the envelope's perimeter.
     fn perimeter_value(&self) -> <Self::Point as Point>::Scalar;
 
+    /// Compares a given axis.
+    fn cmp_axis(l: &Self, r: &Self, axis: usize) -> Ordering;
+
     /// Sorts a given set of objects with envelopes along one of their axes.
-    fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]);
+    fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {
+        envelopes.sort_unstable_by(|l, r| Self::cmp_axis(&l.envelope(), &r.envelope(), axis));
+    }
 
     /// Partitions objects with an envelope along a certain axis.
     ///
@@ -73,5 +80,9 @@ pub trait Envelope: Clone + PartialEq + ::core::fmt::Debug {
         axis: usize,
         envelopes: &mut [T],
         selection_size: usize,
-    );
+    ) {
+        envelopes.select_nth_unstable_by(selection_size, |l: &T, r: &T| {
+            Self::cmp_axis(&l.envelope(), &r.envelope(), axis)
+        });
+    }
 }
