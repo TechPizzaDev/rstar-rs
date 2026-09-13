@@ -120,11 +120,7 @@ where
 
     /// Returns the squared distance to the AABB's [min_point](AABB::min_point)
     pub fn distance_2(&self, point: &P) -> P::Scalar {
-        if self.contains_point(point) {
-            Zero::zero()
-        } else {
-            self.min_point(point).sub(point).length_2()
-        }
+        self.min_point(point).sub(point).length_2()
     }
 }
 
@@ -285,5 +281,14 @@ mod test {
 
         let not_empty = AABB::from_corners([1.0, 1.0], [1.0, 1.0]);
         assert!(!not_empty.is_empty());
+    }
+
+    #[test]
+    fn test_distance_2_contains_zero() {
+        let p1 = [0.7018702292340033, 0.2121617955083932, 0.8120562975177115];
+        let p2 = [0.7297749764202988, 0.23020869735094462, 0.8194675310336391];
+        let aabb = AABB::from_corners(p1, p2);
+        let p = [0.7150876013070484, 0.220750082121574, 0.8186032137709887];
+        assert_eq!(aabb.distance_2(&p), 0.0);
     }
 }
