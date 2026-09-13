@@ -63,8 +63,8 @@ where
     /// Creates a new AABB encompassing two points.
     pub fn from_corners(p1: P, p2: P) -> Self {
         Self {
-            lower: p1.min_point(&p2),
-            upper: p1.max_point(&p2),
+            lower: p1.min(&p2),
+            upper: p1.max(&p2),
         }
     }
 
@@ -76,8 +76,8 @@ where
 
     /// Returns the AABB from already known lower/upper bounds.
     pub fn from_bounds(lower: P, upper: P) -> Self {
-        debug_assert_eq!(lower.min_point(&upper), lower);
-        debug_assert_eq!(lower.max_point(&upper), upper);
+        debug_assert_eq!(lower.min(&upper), lower);
+        debug_assert_eq!(lower.max(&upper), upper);
         Self { lower, upper }
     }
 
@@ -105,8 +105,8 @@ where
                 upper: P::splat(P::Scalar::min_value()),
             },
             |aabb, p| Self {
-                lower: aabb.lower.min_point(p),
-                upper: aabb.upper.max_point(p),
+                lower: aabb.lower.min(p),
+                upper: aabb.upper.max(p),
             },
         )
     }
@@ -115,7 +115,7 @@ where
     ///
     /// If `point` is contained within the AABB, `point` will be returned.
     pub fn min_point(&self, point: &P) -> P {
-        self.upper.min_point(&self.lower.max_point(point))
+        self.upper.min(&self.lower.max(point))
     }
 
     /// Returns the squared distance to the AABB's [min_point](AABB::min_point)
@@ -152,14 +152,14 @@ where
     }
 
     fn merge(&mut self, other: &Self) {
-        self.lower = self.lower.min_point(&other.lower);
-        self.upper = self.upper.max_point(&other.upper);
+        self.lower = self.lower.min(&other.lower);
+        self.upper = self.upper.max(&other.upper);
     }
 
     fn merged(&self, other: &Self) -> Self {
         AABB {
-            lower: self.lower.min_point(&other.lower),
-            upper: self.upper.max_point(&other.upper),
+            lower: self.lower.min(&other.lower),
+            upper: self.upper.max(&other.upper),
         }
     }
 
@@ -169,7 +169,7 @@ where
 
     fn area(&self) -> P::Scalar {
         let diag = self.upper.sub(&self.lower);
-        diag.max_point(&P::new()).reduce_product()
+        diag.max(&P::new()).reduce_product()
     }
 
     fn distance_2(&self, point: &P) -> P::Scalar {
@@ -182,8 +182,8 @@ where
         let l = l.mul(&l);
         let u = u.mul(&u);
 
-        let min = l.min_point(&u);
-        let max = l.max_point(&u);
+        let min = l.min(&u);
+        let max = l.max(&u);
         let diff = max.sub(&min);
         let i = diff.max_position();
 
@@ -200,8 +200,8 @@ where
 
     fn intersection_area(&self, other: &Self) -> P::Scalar {
         AABB {
-            lower: self.lower.max_point(&other.lower),
-            upper: self.upper.min_point(&other.upper),
+            lower: self.lower.max(&other.lower),
+            upper: self.upper.min(&other.upper),
         }
         .area()
     }

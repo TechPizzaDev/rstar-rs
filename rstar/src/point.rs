@@ -99,21 +99,13 @@ pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
     /// Compares and returns the minimum of two values.
     #[inline]
     fn min(self, other: Self) -> Self {
-        if self < other {
-            self
-        } else {
-            other
-        }
+        if self < other { self } else { other }
     }
 
     /// Compares and returns the maximum of two values.
     #[inline]
     fn max(self, other: Self) -> Self {
-        if self > other {
-            self
-        } else {
-            other
-        }
+        if self > other { self } else { other }
     }
 }
 
@@ -242,12 +234,12 @@ pub trait Point: Clone + PartialEq + Debug {
     }
 
     /// Returns a Point with each component set to the smallest of each component pair of `self` and `other`.
-    fn min_point(&self, other: &Self) -> Self {
+    fn min(&self, other: &Self) -> Self {
         self.component_wise(other, RTreeNum::min)
     }
 
     /// Returns a Point with each component set to the biggest of each component pair of `self` and `other`.
-    fn max_point(&self, other: &Self) -> Self {
+    fn max(&self, other: &Self) -> Self {
         self.component_wise(other, RTreeNum::max)
     }
 
