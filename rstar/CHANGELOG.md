@@ -1,5 +1,11 @@
 # Unreleased
 
+## Fixed
+- Fixed `drain_within_distance` panicking with an arithmetic overflow on an empty tree with integer coordinates. `locate_within_distance` was already guarded against this, its draining counterpart was not.
+
+
+# 0.13.0
+
 ## Added
 - Added missing re-exports of nearest neighbor iterators so they can be named in downstream crates. ([PR](https://github.com/georust/rstar/pull/186))
 - Added nearest neighbor search with distance squared: `nearest_neighbor_with_distance_2` and `nearest_neighbors_with_distance_2` methods ([PR](https://github.com/georust/rstar/pull/191)).
@@ -7,15 +13,16 @@
 - Implemented `RTreeObject` for `Arc<T>` and `Rc<T>`
 - Added `Envelope::is_empty`. ([PR](https://github.com/georust/rstar/pull/190))
 - New `AABB::from_center` utility constructor
+- New `AABB::from_bounds` utility constructor
 
 ## Fixed
 - Fix excessive memory retention in `bulk_load` from `Vec::split_off` over-capacity
 - Fix transcription error in implementation of OMT bulk loading leading to nodes which are too large.
 
 ## Changed
-- Made `RStar` methods take `Point` and `Envelope` as owned values where it makes sense ([PR](https://github.com/georust/rstar/pull/189))
+- **BREAKING** Made `RStar` methods take `Point` and `Envelope` as owned values where it makes sense ([PR](https://github.com/georust/rstar/pull/189))
 - Fix Clippy warning (surfaced in Rust 1.89) related to lifetime elision
-- MSRV is now 1.68 (2023-03-09)
+- MSRV is now 1.85 (released on 2025-02-20 and shipped in Debian Trixie)
 - Fix incorrect assertion message in `verify_parameters` of `rstar/src/params.rs`
 
 

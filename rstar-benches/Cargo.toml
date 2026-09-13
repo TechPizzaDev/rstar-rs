@@ -6,10 +6,9 @@ edition = "2021"
 rust-version = "1.68"
 
 [dev-dependencies]
-criterion = { version = "0.7.0", features = ["html_reports"] }
-geo-types = { version = "0.7.9", features = ["use-rstar_0_12"] }
-rand = { version = "0.8", features = ["min_const_gen"] }
-rand_hc = "0.3"
+criterion = { version = "0.8", features = ["html_reports"] }
+rand = { version = "0.10", features = ["min_const_gen"] }
+rand_hc = "0.5"
 rstar = { path = "../rstar" }
 
 [[bench]]

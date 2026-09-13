@@ -185,6 +185,7 @@ where
 {
     root: ParentNode<T>,
     size: usize,
+    #[cfg_attr(feature = "serde", serde(skip))]
     _params: ::core::marker::PhantomData<Params>,
 }
 
@@ -217,6 +218,28 @@ where
             .field("size", &self.size)
             .field("items", &DebugHelper { rtree: self })
             .finish()
+    }
+}
+
+impl<T, Params> AsRef<RTree<T, Params>> for RTree<T, Params>
+where
+    T: RTreeObject,
+    Params: RTreeParams,
+{
+    #[inline]
+    fn as_ref(&self) -> &RTree<T, Params> {
+        self
+    }
+}
+
+impl<T, Params> AsMut<RTree<T, Params>> for RTree<T, Params>
+where
+    T: RTreeObject,
+    Params: RTreeParams,
+{
+    #[inline]
+    fn as_mut(&mut self) -> &mut RTree<T, Params> {
+        self
     }
 }
 

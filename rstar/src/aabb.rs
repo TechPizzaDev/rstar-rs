@@ -20,17 +20,14 @@ use serde::{Deserialize, Serialize};
 /// type will result in an n-dimensional bounding box.
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct AABB<P>
-where
-    P: Point,
-{
+pub struct AABB<P> {
     lower: P,
     upper: P,
 }
 
 impl<P> AABB<P>
 where
-    P: Point,
+    P: Clone,
 {
     /// Returns the AABB encompassing a single point.
     pub fn from_point(p: P) -> Self {
@@ -55,10 +52,15 @@ where
     pub fn upper(&self) -> P {
         self.upper.clone()
     }
+}
 
+impl<P> AABB<P>
+where
+    P: Point,
+{
     /// Creates a new AABB encompassing two points.
     pub fn from_corners(p1: P, p2: P) -> Self {
-        AABB {
+        Self {
             lower: p1.min_point(&p2),
             upper: p1.max_point(&p2),
         }
@@ -70,14 +72,21 @@ where
         AABB { lower, upper }
     }
 
-    /// Creates a new AABB from a center and a diameter.
-    pub fn from_center(center: P, diameter: P::Scalar) -> Self {
-        let one = P::Scalar::one();
-        let two = one + one;
-        let radius = P::splat(diameter / two);
+    /// Returns the AABB from already known lower/upper bounds.
+    pub fn from_bounds(lower: P, upper: P) -> Self {
+        debug_assert_eq!(lower.min_point(&upper), lower);
+        debug_assert_eq!(lower.max_point(&upper), upper);
+        Self { lower, upper }
+    }
 
-        let p1 = center.add(&radius);
-        let p2 = center.sub(&radius);
+    /// Creates a new AABB from a center and a distance.
+    ///
+    /// Creates the smallest AABB which includes all points within `distance` of `center`.
+    pub fn from_center(center: P, distance: P::Scalar) -> Self {
+        let distance = P::splat(distance);
+
+        let p1 = center.add(&distance);
+        let p2 = center.sub(&distance);
 
         Self::from_corners(p1, p2)
     }
