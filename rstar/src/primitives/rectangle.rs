@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::object::{PointDistance, RTreeObject};
-use crate::point::{Point, PointExt};
+use crate::point::Point;
 use crate::{aabb::AABB, object::Distance};
 
 /// An n-dimensional rectangle defined by its two corners.

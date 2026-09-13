@@ -1,5 +1,6 @@
 use crate::algorithm::nearest_neighbor;
 use crate::algorithm::nearest_neighbor::NearestNeighborDistance2Iterator;
+use crate::algorithm::nearest_neighbor::NearestNeighborInRangeIterator;
 use crate::algorithm::nearest_neighbor::NearestNeighborIterator;
 use crate::algorithm::removal;
 use crate::algorithm::selection_functions::*;
@@ -987,11 +988,32 @@ where
         if self.size > 0 {
             // The single-nearest-neighbor retrieval may in rare cases return None due to
             // rounding issues. The iterator will still work, though.
-            nearest_neighbor::nearest_neighbor_with_distance_2(&self.root, query_point.clone())
-                .or_else(|| {
-                    self.nearest_neighbor_iter_with_distance_2(query_point)
-                        .next()
-                })
+            nearest_neighbor::nearest_neighbor_in_range(
+                &self.root,
+                query_point.clone(),
+                num_traits::Bounded::max_value(),
+            )
+            .or_else(|| {
+                self.nearest_neighbor_iter_with_distance_2(query_point)
+                    .next()
+            })
+        } else {
+            None
+        }
+    }
+
+    /// TODO: doc
+    pub fn nearest_neighbor_in_range(
+        &self,
+        query_point: <T::Envelope as Envelope>::Point,
+        smallest_min_max_2: Distance<T>,
+    ) -> Option<(&T, Distance<T>)> {
+        if self.size > 0 {
+            nearest_neighbor::nearest_neighbor_in_range(
+                &self.root,
+                query_point.clone(),
+                smallest_min_max_2,
+            )
         } else {
             None
         }
@@ -1142,6 +1164,19 @@ where
         query_point: <T::Envelope as Envelope>::Point,
     ) -> NearestNeighborDistance2Iterator<'_, T> {
         nearest_neighbor::NearestNeighborDistance2Iterator::new(&self.root, query_point)
+    }
+
+    /// TODO: doc
+    pub fn nearest_neighbor_iter_in_range(
+        &self,
+        query_point: <T::Envelope as Envelope>::Point,
+        smallest_min_max_2: Distance<T>,
+    ) -> NearestNeighborInRangeIterator<'_, T> {
+        nearest_neighbor::NearestNeighborInRangeIterator::new(
+            &self.root,
+            query_point,
+            smallest_min_max_2,
+        )
     }
 
     /// Removes the nearest neighbor for a given point and returns it.

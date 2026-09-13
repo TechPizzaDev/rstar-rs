@@ -1,7 +1,7 @@
 use crate::node::{envelope_for_children, ParentNode, RTreeNode};
 use crate::object::RTreeObject;
 use crate::params::{InsertionStrategy, RTreeParams};
-use crate::point::{Point, PointExt};
+use crate::point::Point;
 use crate::rtree::RTree;
 use crate::{envelope::Envelope, object::Distance};
 
@@ -156,7 +156,7 @@ where
     T: RTreeObject,
 {
     let all_leaves = match node.children.first() {
-        Some(RTreeNode::Parent(ref data)) => data.children.first().is_none_or(RTreeNode::is_leaf),
+        Some(RTreeNode::Parent(data)) => data.children.first().is_none_or(RTreeNode::is_leaf),
         None | Some(RTreeNode::Leaf(_)) => return usize::MAX,
     };
 

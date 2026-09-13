@@ -52,8 +52,8 @@ where
 
     fn envelope(&self) -> Self::Envelope {
         match self {
-            RTreeNode::Leaf(ref t) => t.envelope(),
-            RTreeNode::Parent(ref data) => data.envelope.clone(),
+            RTreeNode::Leaf(t) => t.envelope(),
+            RTreeNode::Parent(data) => data.envelope.clone(),
         }
     }
 }
@@ -137,15 +137,15 @@ where
 
         for child in &self.children {
             match child {
-                RTreeNode::Leaf(ref t) => {
+                RTreeNode::Leaf(t) => {
                     envelope.merge(&t.envelope());
-                    if let Some(ref leaf_height) = leaf_height {
+                    if let Some(leaf_height) = leaf_height {
                         assert_eq!(height, *leaf_height);
                     } else {
                         *leaf_height = Some(height);
                     }
                 }
-                RTreeNode::Parent(ref data) => {
+                RTreeNode::Parent(data) => {
                     envelope.merge(&data.envelope);
                     data.sanity_check_inner::<Params>(check_max_size, height + 1, leaf_height);
                 }

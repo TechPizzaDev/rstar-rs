@@ -7,6 +7,13 @@ members = [
     "rstar-benches"
 ]
 
+[workspace.package]
+edition = "2021"
+rust-version = "1.85"
+
+[workspace.dependencies]
+rand = "0.10"
+
 # Ensure any transitive dependencies, e.g. via `geo`, use the local `rstar` crate
 [patch.crates-io]
 rstar = { path = "rstar" }

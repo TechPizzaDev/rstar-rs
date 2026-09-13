@@ -45,7 +45,7 @@ where
     Func: SelectionFunction<T>,
 {
     func: Func,
-    current_nodes: SmallVec<[&'a RTreeNode<T>; 24]>,
+    current_nodes: SmallVec<[&'a RTreeNode<T>; 32]>,
 }
 
 impl<'a, T, Func> SelectionIterator<'a, T, Func>
@@ -80,12 +80,12 @@ where
     fn next(&mut self) -> Option<&'a T> {
         while let Some(next) = self.current_nodes.pop() {
             match next {
-                RTreeNode::Leaf(ref t) => {
+                RTreeNode::Leaf(t) => {
                     if self.func.should_unpack_leaf(t) {
                         return Some(t);
                     }
                 }
-                RTreeNode::Parent(ref data) => {
+                RTreeNode::Parent(data) => {
                     if self.func.should_unpack_parent(&data.envelope) {
                         self.current_nodes.extend(&data.children);
                     }
@@ -123,12 +123,12 @@ where
     {
         for node in parent.children.iter() {
             match node {
-                RTreeNode::Leaf(ref t) => {
+                RTreeNode::Leaf(t) => {
                     if args.func.should_unpack_leaf(t) {
                         (args.visitor)(t)?;
                     }
                 }
-                RTreeNode::Parent(ref data) => {
+                RTreeNode::Parent(data) => {
                     if args.func.should_unpack_parent(&data.envelope()) {
                         inner(data, args)?;
                     }
@@ -186,12 +186,12 @@ where
     fn next(&mut self) -> Option<&'a mut T> {
         while let Some(next) = self.current_nodes.pop() {
             match next {
-                RTreeNode::Leaf(ref mut t) => {
+                RTreeNode::Leaf(t) => {
                     if self.func.should_unpack_leaf(t) {
                         return Some(t);
                     }
                 }
-                RTreeNode::Parent(ref mut data) => {
+                RTreeNode::Parent(data) => {
                     if self.func.should_unpack_parent(&data.envelope) {
                         self.current_nodes.extend(&mut data.children);
                     }
@@ -229,12 +229,12 @@ where
     {
         for node in parent.children.iter_mut() {
             match node {
-                RTreeNode::Leaf(ref mut t) => {
+                RTreeNode::Leaf(t) => {
                     if args.func.should_unpack_leaf(t) {
                         (args.visitor)(t)?;
                     }
                 }
-                RTreeNode::Parent(ref mut data) => {
+                RTreeNode::Parent(data) => {
                     if args.func.should_unpack_parent(&data.envelope()) {
                         inner(data, args)?;
                     }

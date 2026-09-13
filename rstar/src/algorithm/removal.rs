@@ -12,6 +12,8 @@ use alloc::{vec, vec::Vec};
 #[allow(unused_imports)] // Import is required when building without std
 use num_traits::Float;
 
+use smallvec::SmallVec;
+
 /// Iterator returned by `impl IntoIter for RTree`.
 ///
 /// Consumes the whole tree and yields all leaf objects.
@@ -70,7 +72,7 @@ where
     Params: RTreeParams,
     R: SelectionFunction<T>,
 {
-    node_stack: Vec<(ParentNode<T>, usize, usize)>,
+    node_stack: SmallVec<[(ParentNode<T>, usize, usize); 8]>,
     removal_function: R,
     rtree: &'a mut RTree<T, Params>,
     original_size: usize,
@@ -97,9 +99,7 @@ where
         );
         let original_size = replace(rtree.size_mut(), 0);
 
-        let m = Params::MIN_SIZE;
-        let max_depth = (original_size as f32).log(m.max(2) as f32).ceil() as usize;
-        let mut node_stack = Vec::with_capacity(max_depth);
+        let mut node_stack = SmallVec::new();
 
         // Do not push on an empty root onto `node_stack` as
         // its AABB is pathological and might make `should_unpack_parent` panic.
@@ -193,7 +193,7 @@ where
                             self.node_stack.push((child, 0, 0));
                             continue 'attempt_loop;
                         }
-                        RTreeNode::Leaf(ref leaf) => {
+                        RTreeNode::Leaf(leaf) => {
                             if self.removal_function.should_unpack_leaf(leaf) {
                                 // Swap node with last, remove and return the value.
                                 // No need to increment idx as something else has replaced it;
@@ -252,7 +252,7 @@ mod test {
     use std::mem::forget;
 
     use crate::algorithm::selection_functions::{SelectAllFunc, SelectInEnvelopeFuncIntersecting};
-    use crate::point::PointExt;
+    use crate::point::Point;
     use crate::primitives::Line;
     use crate::test_utilities::{create_random_points, create_random_rectangles, SEED_1, SEED_2};
     use crate::AABB;
@@ -322,7 +322,7 @@ mod test {
     fn test_remove() {
         let points = create_random_points(1000, SEED_1);
         let offsets = create_random_points(1000, SEED_2);
-        let scaled = offsets.iter().map(|p| p.mul(0.05));
+        let scaled = offsets.iter().map(|p| p.mul(&Point::splat(0.05)));
         let edges: Vec<_> = points
             .iter()
             .zip(scaled)
