@@ -1,7 +1,7 @@
 use core::cmp::Ordering;
 
-use crate::Envelope;
 use crate::point::{Point, RTreeNum};
+use crate::Envelope;
 use num_traits::{Bounded, One, Zero};
 
 #[cfg(feature = "serde")]

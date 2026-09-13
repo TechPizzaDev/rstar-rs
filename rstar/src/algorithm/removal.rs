@@ -193,7 +193,7 @@ where
                             self.node_stack.push((child, 0, 0));
                             continue 'attempt_loop;
                         }
-                        RTreeNode::Leaf(ref leaf) => {
+                        RTreeNode::Leaf(leaf) => {
                             if self.removal_function.should_unpack_leaf(leaf) {
                                 // Swap node with last, remove and return the value.
                                 // No need to increment idx as something else has replaced it;

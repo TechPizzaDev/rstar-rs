@@ -185,7 +185,7 @@ mod test {
             );
             checked += 1;
             for child in &node.children {
-                if let RTreeNode::Parent(ref p) = child {
+                if let RTreeNode::Parent(p) = child {
                     stack.push(p);
                 }
             }

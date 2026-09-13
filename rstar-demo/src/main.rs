@@ -5,8 +5,8 @@ use kiss3d::planar_camera::{PlanarCamera, Sidescroll};
 use kiss3d::text::Font;
 use kiss3d::window::Window;
 use nalgebra::{Point2, Point3, Vector2};
-use rand::distributions::Uniform;
-use rand::Rng;
+use rand::distr::Uniform;
+use rand::RngExt;
 use rstar::{Point, RStarInsertionStrategy, RTree, RTreeNode, RTreeParams, AABB};
 
 mod three_d;
@@ -142,10 +142,10 @@ fn create_default_camera_2d() -> Sidescroll {
 
 pub fn create_random_points<P: Point<Scalar = f32>>(num_points: usize) -> Vec<P> {
     let mut result = Vec::with_capacity(num_points);
-    let mut rng = rand::thread_rng();
-    let distribution = Uniform::new(-1.0f32, 1.0);
+    let mut rng = rand::rng();
+    let distr = Uniform::new(-1.0f32, 1.0).unwrap();
     for _ in 0..num_points {
-        let new_point = P::generate(|_| rng.sample(distribution));
+        let new_point = P::generate(|_| rng.sample(distr));
         result.push(new_point);
     }
     result
@@ -221,7 +221,7 @@ fn handle_input(window: &Window, scene: &mut Scene) -> Option<RenderData> {
 
 fn draw_tree(window: &mut Window, render_data: &RenderData) {
     match render_data {
-        RenderData::ThreeD(ref lines, ref points) => {
+        RenderData::ThreeD(lines, points) => {
             for (from, to, color) in lines {
                 window.draw_line(from, to, color);
             }

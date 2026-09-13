@@ -99,13 +99,21 @@ pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
     /// Compares and returns the minimum of two values.
     #[inline]
     fn min(self, other: Self) -> Self {
-        if self < other { self } else { other }
+        if self < other {
+            self
+        } else {
+            other
+        }
     }
 
     /// Compares and returns the maximum of two values.
     #[inline]
     fn max(self, other: Self) -> Self {
-        if self > other { self } else { other }
+        if self > other {
+            self
+        } else {
+            other
+        }
     }
 }
 

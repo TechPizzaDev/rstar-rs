@@ -15,7 +15,7 @@ pub fn create_render_data_for_tree_3d(tree: &DemoTree3D) -> RenderData {
                 RTreeNode::Leaf(point) => {
                     vertices.push((Point3::new(point[0], point[1], point[2]), vertex_color))
                 }
-                RTreeNode::Parent(ref data) => {
+                RTreeNode::Parent(data) => {
                     to_visit.push((data, depth + 1));
                 }
             }
