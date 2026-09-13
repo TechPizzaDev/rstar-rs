@@ -179,28 +179,15 @@ where
     fn min_max_dist_2(&self, point: &P) -> P::Scalar {
         let l = self.lower.sub(point);
         let u = self.upper.sub(point);
+        let l = l.mul(&l);
+        let u = u.mul(&u);
 
-        let (mut max_diff, mut max_min, mut max_i) = (Zero::zero(), Zero::zero(), 0);
-        let mut result = P::new();
+        let min = l.min_point(&u);
+        let max = l.max_point(&u);
+        let diff = max.sub(&min);
+        let i = diff.max_position();
 
-        for i in 0..P::DIMENSIONS {
-            let mut min = l.nth(i);
-            let mut max = u.nth(i);
-            max = max * max;
-            min = min * min;
-            if max < min {
-                core::mem::swap(&mut min, &mut max);
-            }
-
-            let diff = max - min;
-            *result.nth_mut(i) = max;
-
-            if diff > max_diff {
-                (max_diff, max_min, max_i) = (diff, min, i);
-            }
-        }
-
-        *result.nth_mut(max_i) = max_min;
+        let result = max.with_component(i, min.nth(i));
         result.reduce_sum()
     }
 

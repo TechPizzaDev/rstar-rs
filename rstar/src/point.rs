@@ -197,6 +197,13 @@ pub trait Point: Clone + PartialEq + Debug {
     /// Mutable variant of [nth](#methods.nth).
     fn nth_mut(&mut self, index: usize) -> &mut Self::Scalar;
 
+    /// Returns a copy of `self` with a value inserted at the given index.
+    fn with_component(&self, index: usize, value: Self::Scalar) -> Self {
+        let mut res = self.clone();
+        *res.nth_mut(index) = value;
+        res
+    }
+
     /// Returns a new Point with all components set to zero.
     fn new() -> Self {
         Self::splat(Zero::zero())
@@ -249,6 +256,20 @@ pub trait Point: Clone + PartialEq + Debug {
     /// Returns a Point with each component set to the biggest of each component pair of `self` and `other`.
     fn max_point(&self, other: &Self) -> Self {
         self.component_wise(other, RTreeNum::max)
+    }
+
+    /// Returns the position of the maximum component within `self`.
+    fn max_position(&self) -> usize {
+        let mut max_val = self.nth(0);
+        let mut max_i = 0;
+        for i in 1..Self::DIMENSIONS {
+            let val = self.nth(i);
+            if val > max_val {
+                max_val = val;
+                max_i = i;
+            }
+        }
+        max_i
     }
 
     /// Returns the squared length of this Point as if it was a vector.
