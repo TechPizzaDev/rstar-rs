@@ -187,7 +187,8 @@ where
         let diff = max.sub(&min);
         let i = diff.max_position();
 
-        let result = max.with_component(i, min.nth(i));
+        let mut result = max.clone();
+        *result.nth_mut(i) = min.nth(i);
         result.reduce_sum()
     }
 

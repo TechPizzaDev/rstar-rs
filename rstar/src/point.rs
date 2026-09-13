@@ -197,13 +197,6 @@ pub trait Point: Clone + PartialEq + Debug {
     /// Mutable variant of [nth](#methods.nth).
     fn nth_mut(&mut self, index: usize) -> &mut Self::Scalar;
 
-    /// Returns a copy of `self` with a value inserted at the given index.
-    fn with_component(&self, index: usize, value: Self::Scalar) -> Self {
-        let mut res = self.clone();
-        *res.nth_mut(index) = value;
-        res
-    }
-
     /// Returns a new Point with all components set to zero.
     fn new() -> Self {
         Self::splat(Zero::zero())
