@@ -65,11 +65,12 @@ pub trait Envelope: Clone + PartialEq + ::core::fmt::Debug {
     fn perimeter_value(&self) -> <Self::Point as Point>::Scalar;
 
     /// Compares a given axis.
-    fn cmp_axis(l: &Self, r: &Self, axis: usize) -> Ordering;
+    fn cmp_axis(&self, other: &Self, axis: usize) -> Option<Ordering>;
 
     /// Sorts a given set of objects with envelopes along one of their axes.
     fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {
-        envelopes.sort_unstable_by(|l, r| Self::cmp_axis(&l.envelope(), &r.envelope(), axis));
+        envelopes
+            .sort_unstable_by(|l, r| Self::cmp_axis(&l.envelope(), &r.envelope(), axis).unwrap());
     }
 
     /// Partitions objects with an envelope along a certain axis.
@@ -82,7 +83,7 @@ pub trait Envelope: Clone + PartialEq + ::core::fmt::Debug {
         selection_size: usize,
     ) {
         envelopes.select_nth_unstable_by(selection_size, |l: &T, r: &T| {
-            Self::cmp_axis(&l.envelope(), &r.envelope(), axis)
+            Self::cmp_axis(&l.envelope(), &r.envelope(), axis).unwrap()
         });
     }
 }

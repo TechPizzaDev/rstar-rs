@@ -227,8 +227,8 @@ where
         diag.reduce_sum().max(P::Scalar::zero())
     }
 
-    fn cmp_axis(l: &Self, r: &Self, axis: usize) -> Ordering {
-        l.lower.nth(axis).partial_cmp(&r.lower.nth(axis)).unwrap()
+    fn cmp_axis(&self, other: &Self, axis: usize) -> Option<Ordering> {
+        self.lower.nth(axis).partial_cmp(&other.lower.nth(axis))
     }
 }
 
